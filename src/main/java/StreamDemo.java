@@ -17,33 +17,33 @@ public class StreamDemo {
         SparkConf conf = new SparkConf().setMaster("spark://wb:7077").setAppName("NetworkWordCount");
         JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(1));
         JavaReceiverInputDStream<String> lines = jssc.socketTextStream("localhost",9999);
-        JavaDStream<String> words = lines.flatMap(
+        JavaPairDStream<String, Integer> wc = lines.flatMap(
                 new FlatMapFunction<String, String>() {
                     public Iterator<String> call(String s) throws Exception {
                         return Arrays.asList(s.split(" ")).iterator();
                     }
                 }
-                );
-        JavaPairDStream<String, Integer> pairs = words.mapToPair(new PairFunction<String, String, Integer>() {
-            public Tuple2<String, Integer> call(String s) throws Exception {
-                return new Tuple2<String, Integer>(s,1);
-            }
-        });
-        JavaPairDStream<String, Integer> wordCounts = pairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
-            }
-        });
-        JavaPairDStream<String, Integer> windowedWordCounts = pairs.reduceByKeyAndWindow(
-                new Function2<Integer, Integer, Integer>() {
-                    @Override
+                )
+                .mapToPair(new PairFunction<String, String, Integer>() {
+                    public Tuple2<String, Integer> call(String s) throws Exception {
+                        return new Tuple2<String, Integer>(s,1);
+                    }
+                })
+                .reduceByKey(new Function2<Integer, Integer, Integer>() {
                     public Integer call(Integer integer, Integer integer2) throws Exception {
                         return integer+integer2;
                     }
-                },Durations.seconds(30), Durations.seconds(10)
-                // (i1, i2) -> i1 + i2, Durations.seconds(30), Durations.seconds(10)
-        );
-        windowedWordCounts.print();
+                })
+                .reduceByKeyAndWindow(
+                    new Function2<Integer, Integer, Integer>() {
+                        @Override
+                        public Integer call(Integer integer, Integer integer2) throws Exception {
+                            return integer+integer2;
+                        }
+                    },Durations.seconds(30), Durations.seconds(10)
+                    // (i1, i2) -> i1 + i2, Durations.seconds(30), Durations.seconds(10)
+            );
+        wc.print();
         jssc.start();              // Start the computation
         jssc.awaitTermination();   // Wait for the computation to terminate
     }
