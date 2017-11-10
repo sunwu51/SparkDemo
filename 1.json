@@ -1,5 +1,8 @@
-[
-  {"name":"Frank","age":23},
-  {"name":"Xiaoming","age":12}
-]
+{"group":1,"name":"Frank","age":23}
+{"group":2,"name":"David","age":32}
+{"group":1,"name":"Lily","age":34}
+{"group":2,"name":"John","age":21}
+{"group":1,"name":"Johnson","age":27}
+{"group":3,"name":"Franklin","age":42}
+
 
