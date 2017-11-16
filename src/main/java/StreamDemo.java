@@ -14,9 +14,11 @@ import java.util.Iterator;
 
 public class StreamDemo {
     public static void main(String[] a) throws InterruptedException {
-        SparkConf conf = new SparkConf().setMaster("spark://wb:7077").setAppName("NetworkWordCount");
+        SparkConf conf = new SparkConf().setMaster("local[3]").setAppName("NetworkWordCount");
         JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(1));
-        JavaReceiverInputDStream<String> lines = jssc.socketTextStream("localhost",9999);
+        JavaReceiverInputDStream<String> lines =
+                jssc.socketTextStream(
+                        "localhost",9999);
         JavaPairDStream<String, Integer> wc = lines.flatMap(
                 new FlatMapFunction<String, String>() {
                     public Iterator<String> call(String s) throws Exception {
@@ -40,7 +42,7 @@ public class StreamDemo {
                         public Integer call(Integer integer, Integer integer2) throws Exception {
                             return integer+integer2;
                         }
-                    },Durations.seconds(30), Durations.seconds(10)
+                    },Durations.seconds(10), Durations.seconds(3)
                     // (i1, i2) -> i1 + i2, Durations.seconds(30), Durations.seconds(10)
             );
         wc.print();
